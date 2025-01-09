@@ -1,0 +1,61 @@
+# Evaluation runs
+map_prediction_toolbox_path: '/home/seungchan/Documents/map_prediction_toolbox/'
+num_data_per_world: 1
+
+test_world_only: false
+train_test_world_split_path: 'data_factory/train_test_worlds_split_1127.json'
+collect_world_list: ['50052750']
+output_root_path: '/home/seungchan/Documents/map_prediction_toolbox/experiments/'
+
+
+start_pose: [513,880]
+cur_pose_dist_threshold_m: 1
+
+modes_to_test: ['nearest', 'obsunk', 'onlyvar', 'visunk', 'visvar', 'visvarprob', 'upen', 'hectoraug']
+
+unknown_as_occ: true
+use_distance_transform_for_planning: true 
+upen_config:
+  rrt_max_iters: 2500
+  expand_dis: 5
+  goal_sample_rate: -1 # ensure that goal sampling rate is below 0 for exploration
+  connect_circle_dist: 20
+  rrt_num_path: 1000
+  rrt_straight_line: false
+  reach_horizon: 50
+  goal_pose_freq: 10
+
+lidar_sim_configs:
+  laser_range_m: 20
+  num_laser: 2500
+  pixel_per_meter: 10
+  dilate_diam_for_planning: 3
+
+pred_vis_configs:
+  laser_range_m: 20
+  pixel_per_meter: 10
+  num_laser: 250
+
+mission_time: 500
+
+show_plt_freq: 50
+
+max_workers: 1
+
+ensemble_folder_name: '20240222_lama_ensemble'
+
+
+# Number of spatial classes in the output
+n_spatial_classes: 3
+
+# Scale factor for the map loss
+map_loss_scale: 1.0
+
+# LAMA Model Configs
+lama_model_path: '/home/seungchan/Documents/multi_map_pred_ws/src/map_prediction_toolbox/weights/cherieho_2024-02-12_14-25-41_train_big-lama_/'
+lama_transform_variant: 'default_map_eval'
+lama_device: 'cuda:0'
+lama_out_size: (512, 512)
+
+# GUI
+use_preset_frontiers: false
