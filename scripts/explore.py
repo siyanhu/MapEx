@@ -25,7 +25,6 @@ from matplotlib.colors import LinearSegmentedColormap, ListedColormap
 from lama_pred_utils import load_lama_model, visualize_prediction, get_lama_transform, convert_obsimg_to_model_input
 import sys
 sys.path.append('../')
-from scripts.gen_building_utils import *
 from scripts import simple_mask_utils as smu 
 #from models.predictors.map_predictor_model import OccupancyPredictor
 #from models.networks.unet_model import UNet
