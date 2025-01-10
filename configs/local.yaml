@@ -11,7 +11,7 @@ output_root_path: '/home/seungchan/MapEx/experiments/' #customize this path, thi
 start_pose: [513,880]
 cur_pose_dist_threshold_m: 1
 
-modes_to_test: ['nearest', 'obsunk', 'onlyvar', 'visunk', 'visvar', 'visvarprob', 'upen', 'hectoraug']
+modes_to_test: ['nearest', 'obsunk', 'onlyvar', 'visunk', 'visvar', 'visvarprob', 'upen', 'hector', 'hectoraug']
 
 unknown_as_occ: true
 use_distance_transform_for_planning: true 

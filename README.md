@@ -4,23 +4,23 @@
     Venue
 </h3>
   <p align="center">
-    <a href="https://cherieho.com/"><strong>Cherie Ho*</strong></a>
+    <a href="https://cherieho.com/" target="_blank"><strong>Cherie Ho*</strong></a>
     ·
-    <a href="https://seungchan-kim.github.io"><strong>Seungchan Kim*</strong></a>
-    .
-    <a href="https://bradymoon.com/"><strong>Brady Moon</strong></a>
-    .
+    <a href="https://seungchan-kim.github.io" target="_blank"><strong>Seungchan Kim*</strong></a>
+    ·
+    <a href="https://bradymoon.com/" target="_blank"><strong>Brady Moon</strong></a>
+    ·
     <a href=""><strong>Aditya Parandekar</strong></a>
-    .
+    ·
     <a href=""><strong>Narek Harutyunyan</strong></a>
     <br>
-    <a href="https://sairlab.org/team/chenw/"><strong>Chen Wang</strong></a>
+    <a href="https://sairlab.org/team/chenw/" target="_blank"><strong>Chen Wang</strong></a>
     ·
-    <a href="https://www.cs.cmu.edu/~./katia/"><strong>Katia Sycara</strong></a>
+    <a href="https://www.cs.cmu.edu/~./katia/" target="_blank"><strong>Katia Sycara</strong></a>
     ·
-    <a href="https://profiles.uts.edu.au/Graeme.Best"><strong>Graeme Best</strong></a>
-    .
-    <a href="https://theairlab.org/team/sebastian/"><strong>Sebastian Scherer</strong></a>
+    <a href="https://profiles.uts.edu.au/Graeme.Best" target="_blank"><strong>Graeme Best</strong></a>
+    ·
+    <a href="https://theairlab.org/team/sebastian/" target="_blank"><strong>Sebastian Scherer</strong></a>
     <br>
   </p>
 </p>
@@ -35,22 +35,12 @@ You can install all requirements using pip by running:
 
     pip install -r mapper/requirements.txt
 
-### Use Docker
-To use Mapper using Docker, please follow the steps:
-1. Build the docker image `mapper/Dockerfile` by running: 
-        
-        cd mapper/
-        docker build -t mapper:release mapper
-
-2. Launch the container while mounting this repository to the container file system.
-    
-        docker run -v <PATH_TO_THIS_REPO>:/home/mapper --network=host -it --gpus=all mapper:release
 
 ### Run MapEx
 In order to run MapEx
 
     cd scripts/
-    python3 explorer.py
+    python3 explore.py
 
 ## Citation
 
