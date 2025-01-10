@@ -6,24 +6,23 @@
   <p align="center">
     <a href="https://cherieho.com/"><strong>Cherie Ho*</strong></a>
     ·
-    <a href="https://cherieho.com/"><strong>Seungchan Kim*</strong></a>
+    <a href="https://seungchan-kim.github.io"><strong>Seungchan Kim*</strong></a>
     .
-    <a href="https://cherieho.com/"><strong>Brady Moon</strong></a>
+    <a href="https://bradymoon.com/"><strong>Brady Moon</strong></a>
     .
-    <a href="https://cherieho.com/"><strong>Aditya Parandekar</strong></a>
+    <a href=""><strong>Aditya Parandekar</strong></a>
     .
-    <a href="https://cherieho.com/"><strong>Narek Harutunyan</strong></a>
+    <a href=""><strong>Narek Harutyunyan</strong></a>
     <br>
     <a href="https://sairlab.org/team/chenw/"><strong>Chen Wang</strong></a>
     ·
     <a href="https://www.cs.cmu.edu/~./katia/"><strong>Katia Sycara</strong></a>
     ·
-    <a href="https://theairlab.org/team/sebastian/"><strong>Graeme Best</strong></a>
+    <a href="https://profiles.uts.edu.au/Graeme.Best"><strong>Graeme Best</strong></a>
     .
     <a href="https://theairlab.org/team/sebastian/"><strong>Sebastian Scherer</strong></a>
     <br>
   </p>
-
 </p>
 
 
@@ -47,13 +46,10 @@ To use Mapper using Docker, please follow the steps:
     
         docker run -v <PATH_TO_THIS_REPO>:/home/mapper --network=host -it --gpus=all mapper:release
 
-
-## Trained Weights
-
-## License
-
-## Acknowledgement
-
+### Run MapEx
+In order to run MapEx
+    cd scripts/
+    python3 explorer.py
 
 ## Citation
 
