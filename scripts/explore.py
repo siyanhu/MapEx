@@ -1,7 +1,6 @@
 import numpy as np
 import os 
 import cv2
-from tqdm.contrib.concurrent import process_map  # or thread_map
 import time
 from omegaconf import OmegaConf
 import hydra 
@@ -9,10 +8,6 @@ import torch
 from torchvision.transforms import ToTensor, Resize, Compose
 import pyastar2d    
 import json
-import multiprocessing
-from tqdm import tqdm
-import yaml
-from torch.utils.data._utils.collate import default_collate
 from skimage.measure import block_reduce
 import albumentations as A
 import traceback
@@ -26,11 +21,6 @@ from lama_pred_utils import load_lama_model, visualize_prediction, get_lama_tran
 import sys
 sys.path.append('../')
 from scripts import simple_mask_utils as smu 
-#from models.predictors.map_predictor_model import OccupancyPredictor
-#from models.networks.unet_model import UNet
-#import eval_deploy.viz_utils as vutils
-#import eval_deploy.deploy_utils as dutils
-#from eval_deploy import glocal_utils as glocal
 import scripts.sim_utils as sim_utils
 import upen_baseline
 import matplotlib
