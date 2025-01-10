@@ -48,12 +48,13 @@ To use Mapper using Docker, please follow the steps:
 
 ### Run MapEx
 In order to run MapEx
+
     cd scripts/
     python3 explorer.py
 
 ## Citation
 
-If you find our paper, dataset or code useful, please cite us:
+If you find our paper or code useful, please cite us:
 
 ```bib
 @article{ho2024mapex,
