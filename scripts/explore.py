@@ -484,9 +484,7 @@ def run_exploration_for_map(occ_map, exp_title, models_list,lama_alltrain_model,
                     else:
                         raise ValueError("Invalid mode: {}, mode not available for getting init_frontier_value".format(mode))
                     cost_transform_map = get_hector_exploration_transform_map(mapper.obs_map, frontier_region_centers, init_cost=danger_transform_map, mode=mode, infogain_val_list=init_frontier_value, info_gain_weight=200)
-  
 
-                
             # Local planning
             chosen_local_planner = determine_local_planner(mode) # astar or gradient
             
@@ -508,7 +506,7 @@ def run_exploration_for_map(occ_map, exp_title, models_list,lama_alltrain_model,
                 next_pose = sim_utils.psuedo_traj_controller(plan_x, plan_y, plan_ind_to_use=ind_to_move_per_step)
             elif chosen_local_planner == 'gradient':
                 # Given current pose, find the steepest gradient direction to go in
-                for _ in range(ind_to_move_per_step): # Move the same steps as psuedo_traj_controller + A*. Need to do a for loop since gradient planner is one-step planning
+                for _ in range(ind_to_move_per_step): # Move the same steps as psuedo_traj_controller + A*
                     next_pose = gradient_planner(cur_pose, cost_transform_map=cost_transform_map) 
                     cur_pose = next_pose
             else:

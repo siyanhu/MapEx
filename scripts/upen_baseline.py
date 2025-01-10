@@ -9,7 +9,7 @@ import torch
 
 # Custom
 from path_planning_lama import get_options_dict_from_yml, opposite_quadrant
-import data_factory.sim_utils as sim_utils
+import scripts.sim_utils as sim_utils
 from rrt_star import RRTStar
 
 def eval_path_expl(ensemble, paths, reach_horizon):
