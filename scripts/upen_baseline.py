@@ -6,11 +6,20 @@ import numpy as np
 from matplotlib import pyplot as plt
 import time 
 import torch
-
-# Custom
-from path_planning_lama import get_options_dict_from_yml, opposite_quadrant
+import hydra
+from omegaconf import OmegaConf
 import scripts.sim_utils as sim_utils
 from rrt_star import RRTStar
+
+def get_options_dict_from_yml(config_name):
+    cwd = os.getcwd()
+    hydra_config_dir_path = os.path.join(cwd, '../configs')
+    print(hydra_config_dir_path)
+    with hydra.initialize_config_dir(config_dir=hydra_config_dir_path):
+        cfg = hydra.compose(config_name=config_name)
+    options_dict = OmegaConf.to_container(cfg)
+    options = OmegaConf.create(options_dict)
+    return options
 
 def eval_path_expl(ensemble, paths, reach_horizon):
     # evaluate each path based on its average occupancy uncertainty

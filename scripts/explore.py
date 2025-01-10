@@ -1,4 +1,3 @@
-## Simple Gym-like environment for KTH dataset
 import numpy as np
 import os 
 import cv2
@@ -23,9 +22,7 @@ from collections import deque
 from queue import PriorityQueue
 from matplotlib.colors import LinearSegmentedColormap, ListedColormap
 
-# custom functions 
 from lama_pred_utils import load_lama_model, visualize_prediction, get_lama_transform, convert_obsimg_to_model_input
-# custom imports
 import sys
 sys.path.append('../')
 from scripts.gen_building_utils import *
