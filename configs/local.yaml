@@ -5,7 +5,7 @@ num_data_per_world: 1
 test_world_only: false
 train_test_world_split_path: 'data_factory/train_test_worlds_split_1127.json'
 collect_world_list: ['50052750']
-output_root_path: '/home/seungchan/MapEx/experiments/' #customize this path, this is where your experiment results will be saved
+output_folder_name: 'experiments'
 
 start_pose: [513,880]
 cur_pose_dist_threshold_m: 1
@@ -44,7 +44,7 @@ show_plt_freq: 50
 
 max_workers: 1
 
-ensemble_folder_name: 'lama_ensemble'
+ensemble_folder_name: 'weights/lama_ensemble'
 
 # Number of spatial classes in the output
 n_spatial_classes: 3
@@ -53,7 +53,7 @@ n_spatial_classes: 3
 map_loss_scale: 1.0
 
 # LAMA Model Configs
-big_lama_model_path: '/home/seungchan/MapEx/pretrained_models/big_lama/'
+big_lama_model_folder_name: 'weights/big_lama'
 lama_transform_variant: 'default_map_eval'
 lama_device: 'cuda:0'
 lama_out_size: (512, 512)

@@ -788,7 +788,7 @@ if __name__ == '__main__':
     kth_map_folder_paths = [os.path.join(kth_map_folder_path, p) for p in kth_map_paths] * collect_opts.num_data_per_world
 
     # Make output_subdirectory_name if it doesn't exist 
-    output_root_dir = os.path.join(collect_opts.output_root_path, output_subdirectory_name)
+    output_root_dir = os.path.join(collect_opts.root_path, collect_opts.folder_name, output_subdirectory_name)
     if not os.path.exists(output_root_dir):
         os.makedirs(output_root_dir)
     
@@ -806,7 +806,7 @@ if __name__ == '__main__':
             model_list.append(model)
     
     #setup a big lama model (G in the paper) - fine-tuned with the entire training set
-    lama_model = load_lama_model(collect_opts.big_lama_model_path, device=collect_opts.lama_device)
+    lama_model = load_lama_model(os.path.join(collect_opts.root_path, 'pretrained_models', collect_opts.big_lama_model_folder_name), device=collect_opts.lama_device)
     lama_map_transform = get_lama_transform(collect_opts.lama_transform_variant, collect_opts.lama_out_size)
 
     run_exploration_args = []

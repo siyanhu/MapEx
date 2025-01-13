@@ -38,13 +38,13 @@ You can install all requirements using pip by running:
 
 
 ### Download pretrained prediction models (KTH dataset)
-You can download pretrained models from this <a href="https://drive.google.com/drive/u/0/folders/1u9WZ9ftwaMbP-RVySuNSVEdUDV_x4Dw6">link</a>. Place the zip file under `pretrained_models' directory and unzip the file. 
+You can download pretrained models from this <a href="https://drive.google.com/drive/u/0/folders/1u9WZ9ftwaMbP-RVySuNSVEdUDV_x4Dw6">link</a>. Place the zip file under `pretrained_models` directory and unzip the file. 
 
     mv ~/Downloads/weights.zip ~/MapEx/pretrained_models/
     cd ~/MapEx/pretrained_models/
     unzip weights.zip
 
-The `pretrained_model' directory and its subdirectories should be organized as below: 
+The `pretrained_model` directory and its subdirectories should be organized as below: 
 
     MapEx
     ├── pretrained_models
@@ -74,7 +74,7 @@ In order to run MapEx
 If you find our paper or code useful, please cite us:
 
 ```bib
-@article{ho2024mapex,
+@article{ho_kim2024mapex,
   title={MapEx: Indoor Structure Exploration with Probabilistic Information Gain from Global Map Predictions},
   author={Ho, Cherie and Kim, Seungchan and Moon, Brady and Parandekar, Aditya and Harutyunyan, Narek and Wang, Chen and Sycara, Katia and Best, Graeme and Scherer, Sebastian},
   journal={arXiv preprint arXiv:2409.15590},
