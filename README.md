@@ -37,6 +37,32 @@ You can install all requirements using pip by running:
     pip install -r mapper/requirements.txt
 
 
+### Download pretrained prediction models (KTH dataset)
+You can download pretrained models from this <a href="https://drive.google.com/drive/u/0/folders/1u9WZ9ftwaMbP-RVySuNSVEdUDV_x4Dw6">link</a>. Place the zip file under `pretrained_models' directory and unzip the file. 
+
+    mv ~/Downloads/weights.zip ~/MapEx/pretrained_models/
+    cd ~/MapEx/pretrained_models/
+    unzip weights.zip
+
+The `pretrained_model' directory and its subdirectories should be organized as below: 
+
+    MapEx
+    ├── pretrained_models
+    │   ├── weights
+    │   │   │   ├── big_lama
+    │   │   │   │   ├── models
+    │   │   │   │   │   ├── best.ckpt
+    │   │   │   ├── lama_ensemble
+    │   │   │   │   ├── train_1
+    │   │   │   │   │   ├── models
+    │   │   │   │   │   │   ├── best.ckpt
+    │   │   │   │   ├── train_2
+    │   │   │   │   │   ├── models
+    │   │   │   │   │   │   ├── best.ckpt
+    │   │   │   │   ├── train_3
+    │   │   │   │   │   ├── models
+    │   │   │   │   │   │   ├── best.ckpt
+
 ### Run MapEx
 In order to run MapEx
 
