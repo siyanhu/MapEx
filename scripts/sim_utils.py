@@ -12,14 +12,7 @@ from matplotlib import pyplot as plt
 # custom imports
 import sys
 sys.path.append('../')
-from data_factory.gen_building_utils import *
-from data_factory import simple_mask_utils as smu 
-from models.predictors.map_predictor_model import OccupancyPredictor
-from models.networks.unet_model import UNet
-import eval_deploy.viz_utils as vutils
-import eval_deploy.deploy_utils as dutils
-from eval_deploy import glocal_utils as glocal
-from pdb import set_trace as bp
+from scripts import simple_mask_utils as smu
 
 def makePyOMap(occ_grid):
     return range_libc.PyOMap(occ_grid)
@@ -80,8 +73,8 @@ class FrontierPlanner():
         self.region_size_threshold = 10 # Filters out frontier regions that are smaller than this
         self.score_mode = score_mode
         print(self.score_mode)
-        assert score_mode in ['nearest', 'visvar', 'visunk','obsunk','onlyvar', 'onlyvarsmall', 'visvarsubsample', 'onlyvarsubsample', 'onlyvarsubsamplesmall', 'visgtvarsubsample', 'visgtvar', 'visgtunk','visvarsubsampleprob','visunkprob', 'hector', 'hectoraug'],\
-            "score_mode must be one of ['nearest', 'visvar', 'visunk','obsunk','onlyvar', 'onlyvarsmall', 'visvarsubsample', 'onlyvarsubsample', 'onlyvarsubsamplesmall', 'visgtvarsubsample', 'visgtvar', 'visgtunk','visvarsubsampleprob','visunkprob', 'hector, 'hectoraug]"
+        assert score_mode in ['nearest', 'visvar', 'visunk','obsunk','onlyvar', 'visvarprob', 'hector', 'hectoraug'],\
+            "score_mode must be one of ['nearest', 'visvar', 'visunk','obsunk','onlyvar', 'visvarprob', 'hector, 'hectoraug]"
     def get_frontier_centers_given_obs_map(self, obs_map):
         """
         Get frontier centers given global observed map. 
@@ -126,13 +119,10 @@ class FrontierPlanner():
                 closest_point_to_center = region_i[np.argmin(dist_to_center)]
                 frontier_region_centers.append(closest_point_to_center)
                 num_large_regions += 1
-        
-        # if num_large_regions == 0:
-        #     import pdb; pdb.set_trace()
-        # print("Num large regions: {}, Num small regions: {}".format(num_large_regions, num_regions - num_large_regions))
+
         return frontier_region_centers, frontier_map, num_large_regions
 
-    def get_frontier_val(self, frontier_i, cost_dist, obs_map, flooded_grid, var_map=None, subsampled_var_map=None):
+    def get_frontier_val(self, frontier_i, cost_dist, obs_map, flooded_grid, var_map=None):
         
         # Find currently unknown cells in observed map 
         assert obs_map is not None, "obs_map must be provided if use_visibility_unknown is True"
@@ -143,22 +133,16 @@ class FrontierPlanner():
         vis_ind = np.argwhere(flooded_grid)
         assert vis_ind.shape[1] == 2
         
-        if self.score_mode == 'visvar' or self.score_mode == 'visgtvar': # count variance of pixels in areas currently unobserved but predicted will be seen
+        if self.score_mode == 'visvar' or self.score_mode == 'visvarprob': # count variance of pixels in areas currently unobserved but predicted will be seen
             assert var_map is not None, "var_map must be provided if use_visibility_variance is True"
             frontier_val = torch.sum(var_map[vis_ind[:,0], vis_ind[:,1]])
-        elif self.score_mode == 'visvarsubsample' or self.score_mode == 'visgtvarsubsample' or self.score_mode == 'visvarsubsampleprob': # count variance of SUBSAMPLED pixels in areas currently unobserved but predicted will be seen 
-            assert subsampled_var_map is not None, "subsampled_var_map must be provided"
-            frontier_val = torch.sum(subsampled_var_map[vis_ind[:,0], vis_ind[:,1]])
-        elif self.score_mode == 'visunk' or self.score_mode == 'visgtunk' or self.score_mode == 'visunkprob': # count number of pixels in areas currently unobserved but predicted will be seen
+        elif self.score_mode == 'visunk': # count number of pixels in areas currently unobserved but predicted will be seen
             frontier_val = len(vis_ind)
         elif self.score_mode == 'obsunk': # count number of pixels in areas currently not observed but observed will be seen
             frontier_val = len(vis_ind) 
-        elif self.score_mode == 'onlyvar' or self.score_mode == 'onlyvarsmall':
+        elif self.score_mode == 'onlyvar':
             assert var_map is not None, "var_map must be provided if use_visibility_variance is True"
             frontier_val = torch.sum(var_map[vis_ind[:,0], vis_ind[:,1]])
-        elif self.score_mode == 'onlyvarsubsample' or self.score_mode == 'onlyvarsubsamplesmall':
-            assert subsampled_var_map is not None, "subsampled_var_map must be provided"
-            frontier_val = torch.sum(subsampled_var_map[vis_ind[:,0], vis_ind[:,1]])
         elif self.score_mode == 'hectoraug':
             frontier_val = len(vis_ind) # count number of pixels in areas currently not observed but observed will be seen
             
@@ -172,7 +156,7 @@ class FrontierPlanner():
             frontier_val = frontier_val / (cost_dist[frontier_i]) #!
         return frontier_val, flooded_grid
     
-    def score_frontiers(self, frontier_region_centers, cur_pose, pose_list, pred_maputils, pred_vis_config, obs_map=None, mean_map=None, var_map=None, subsampled_var_map=None, gt_map=None):
+    def score_frontiers(self, frontier_region_centers, cur_pose, pose_list, pred_maputils, pred_vis_config, obs_map=None, mean_map=None, var_map=None):
         frontier_region_centers = np.array(frontier_region_centers)
         pose_list = np.array(pose_list)
 
@@ -185,60 +169,34 @@ class FrontierPlanner():
             total_frontier_cost_list += cost_dist
 
         viz_most_flooded_grid = None # flood grid with most vis_ind
-        val_most_flooded_grid = 0 # most vis_ind
-        viz_min_flooded_grid = None # flood grid with min vis_ind
-        val_min_flooded_grid = 100000000 # min vis_ind
         viz_medium_flooded_grid = None
-        
-        # For probabilistic raycast, mainly to compare with normal to see what the difference would be 
-        viz_most_flooded_grid_prob = None # flood grid with most vis_ind
-        val_most_flooded_grid_prob = 0 # most vis_ind
-        viz_min_flooded_grid_prob = None # flood grid with min vis_ind
-        val_min_flooded_grid_prob = 100000000 # min vis_ind
 
         ind1 = None
         ind2 = None
-        
-        
 
         # Convert different options of map to pyomap
-        gt_map_pyomap = {"PyOMap": makePyOMap(gt_map), "occ_grid": gt_map}
         zeros_map_pyomap = {"PyOMap": makePyOMap(np.zeros_like(obs_map)), "occ_grid": np.zeros_like(obs_map)}
         obs_map_pyomap = {"PyOMap": makePyOMap((obs_map == 1)), "occ_grid":(obs_map==1)}
         
         # Individually go through each frontier if it is one of the modes that is doing a raycast
-        if self.score_mode in ['visvar', 'visvarsubsample', 'visunk', 'obsunk', 'onlyvar', 'onlyvarsubsample', 'onlyvarsmall', 'onlyvarsubsamplesmall', 'visgtvarsubsample', 'visgtvar', 'visgtunk', 'visvarsubsampleprob','visunkprob', 'hectoraug']: #!
+        if self.score_mode in ['visvar', 'visunk', 'obsunk', 'onlyvar', 'visvarprob','hectoraug']: #!
             # Number of pixels seen
-            # TODO: change to num unknown pixel seen
             frontier_val_list = []
-
             flooded_grid_list = []
-            
             skip_raycast = False 
 
             # If score mode is visvar or visunk or visvarsubsample, we get map_for_raycast from pred_maputils
-            if self.score_mode in ['visvar', 'visunk', 'visvarsubsample', 'visvarsubsampleprob','visunkprob']:
+            if self.score_mode in ['visvar', 'visunk', 'visvarprob']:
                 assert obs_map.shape == pred_maputils.shape, "obs_map and pred_maputils must have the same shape, but got {} and {}".format(obs_map.shape, pred_maputils.shape)
-                
                 pred_maputils_pyomap = {"PyOMap": makePyOMap(pred_maputils), "occ_grid": pred_maputils}
                 map_for_raycast = pred_maputils_pyomap 
                 raycast_range = pred_vis_config['laser_range_m'] * pred_vis_config['pixel_per_meter']
-            
-                
-            elif self.score_mode in ['visgtvarsubsample', 'visgtvar', 'visgtunk']:
-                assert gt_map.shape == pred_maputils.shape
-                map_for_raycast = gt_map_pyomap 
-                raycast_range = pred_vis_config['laser_range_m'] * pred_vis_config['pixel_per_meter']
-                
             elif self.score_mode == 'obsunk': 
                 map_for_raycast = obs_map_pyomap
                 raycast_range = pred_vis_config['laser_range_m'] * pred_vis_config['pixel_per_meter']
-            elif self.score_mode == 'onlyvar' or self.score_mode == 'onlyvarsubsample':
+            elif self.score_mode == 'onlyvar':
                 map_for_raycast = zeros_map_pyomap
-                raycast_range = pred_vis_config['laser_range_m'] * pred_vis_config['pixel_per_meter']
-            elif self.score_mode == 'onlyvarsmall' or self.score_mode == 'onlyvarsubsamplesmall':
-                map_for_raycast = zeros_map_pyomap
-                raycast_range = 5 * pred_vis_config['pixel_per_meter']  # TODO: parametrize 5
+                raycast_range = 5 * pred_vis_config['pixel_per_meter']
             # For augmented hector which uses the predicted map for flood fill calculation, we use the predicted map. There should be no raycast range    
             elif self.score_mode == 'hectoraug':
                 assert obs_map.shape == pred_maputils.shape, "obs_map and pred_maputils must have the same shape, but got {} and {}".format(obs_map.shape, pred_maputils.shape)
@@ -259,7 +217,7 @@ class FrontierPlanner():
                             occ_map_obj=map_for_raycast['PyOMap'],
                             skip_raycast=skip_raycast)
                 
-                if self.score_mode == 'visvarsubsampleprob' or self.score_mode == 'visunkprob':
+                if self.score_mode == 'visvarprob':
                     print("Using probabilistic raycast")
                     # Calculate the probabilistic raycast using mean predicted occupancy map
                     vis_ind_prob, lidar_mask_prob, inited_flood_grid_prob, actual_hit_points_prob, flooded_grid_prob = \
@@ -268,12 +226,12 @@ class FrontierPlanner():
                                         laser_range=raycast_range, num_laser=pred_vis_config['num_laser'],
                                         raycast_mode='probabilistic',
                                         hit_prob_threshold=0.8, 
-                                        skip_raycast=skip_raycast) # TODO: parametrize hit_prob_threshold
+                                        skip_raycast=skip_raycast)
                     vis_ind = vis_ind_prob
                     flooded_grid = flooded_grid_prob
                     
                     
-                frontier_val, flooded_grid = self.get_frontier_val(frontier_i, cost_dist, obs_map, flooded_grid, var_map, subsampled_var_map)
+                frontier_val, flooded_grid = self.get_frontier_val(frontier_i, cost_dist, obs_map, flooded_grid, var_map)
                 
                 # Visualization of the most and least flooded grid
                 frontier_val_list.append(frontier_val.item())
@@ -286,41 +244,9 @@ class FrontierPlanner():
             if len(frontier_val_list) > 2:
                 ind2 = sorted_indexed_fv[2][0]
                 viz_medium_flooded_grid = flooded_grid_list[ind2]
-            
-                # if frontier_val > val_most_flooded_grid:
-                #     val_most_flooded_grid = frontier_val
-                #     viz_most_flooded_grid = flooded_grid
-                    
-                #     # val_most_flooded_grid_prob = frontier_val_prob
-                #     # viz_most_flooded_grid_prob = flooded_grid_prob
-                    
-                    
-                # if frontier_val < val_min_flooded_grid:
-                #     val_min_flooded_grid = frontier_val
-                #     viz_min_flooded_grid = flooded_grid
 
             total_frontier_cost_list += - np.array(frontier_val_list)
-            
-            
-            # plt_row = 2
-            # plt_col = 3
-            # fig2, ax2 = plt.subplots(plt_row, plt_col, figsize=(10, 10))
-            # ax2[0, 0].imshow(obs_map)
-            # ax2[0, 0].set_title('Observed map')
-            # ax2[0, 1].imshow(gt_map)
-            # ax2[0, 1].set_title('GT map')
-            
-            # ax2[0, 2].imshow(mean_map)
-            # ax2[0, 2].set_title('Mean map')
-            # if viz_most_flooded_grid is not None:
-            #     ax2[1, 0].imshow(viz_most_flooded_grid)
-            #     ax2[1, 0].set_title('Most flooded grid, \nval: {}'.format(val_most_flooded_grid))
-            # if viz_most_flooded_grid_prob is not None:
-            #     ax2[1, 1].imshow(viz_most_flooded_grid_prob)
-            #     ax2[1, 1].set_title('Most flooded grid prob, \nval: {}'.format(val_most_flooded_grid_prob))
-                
-            # fig2.savefig('score_frontiers.png')
-            # plt.close(fig2)
+
         elif self.score_mode == 'nearest':
             pass
         else:
@@ -394,22 +320,12 @@ class Mapper():
         self.accumulate_obs_given_dict(obs_dict)
         # Number of newly observed cells
         num_new_obs_cells = np.sum(self.obs_map == 0) + np.sum(self.obs_map == 1) - num_prev_obs_cells
-        # print("Num prev observed cells: ", num_prev_obs_cells)
-        # print("Num newly observed cells: ", num_new_obs_cells)
 
     def inflate_map(self, map, unknown_as_occ=False):
         # Get inflated obs map for local planner
         
         dilated_map_for_planning = map.copy()
         inverted_binary_map_for_planning = map.copy() > 0.5 
-        #import matplotlib.pyplot as plt 
-        #plt.figure()
-        #plt.imshow(dilated_map_for_planning)
-        #print(dilated_map_for_planning)
-        #plt.figure()
-        #plt.imshow(inverted_binary_map_for_planning)
-        #plt.show()
-        # Inflate the map for planning
         inverted_dilated_map_for_planning = binary_dilation(inverted_binary_map_for_planning, structure=np.ones((self.dilate_diam_for_planning, self.dilate_diam_for_planning)))
         # Find areas of 1s in inverted_dilated_map_for_planning, then add it to dilated_map_for_planning
         dilated_map_for_planning[inverted_dilated_map_for_planning] = 1
@@ -417,13 +333,10 @@ class Mapper():
         occ_grid_pyastar = np.zeros((dilated_map_for_planning.shape[0], dilated_map_for_planning.shape[1]), dtype=np.float32) # 0: free/unknown, np.inf: occupied
         
         if self.use_distance_transform_for_planning:
-            # TODO: don't put unknown as occupied
-            # TODO: use_dt should have unknown_as_occ cases
             distance_transform = scipy.ndimage.distance_transform_cdt(dilated_map_for_planning == 0) * -1 
             biased_distance_transform = np.clip(distance_transform + self.dt_floor_val, 1, self.dt_floor_val) 
             if unknown_as_occ: 
                 # Unknown as occupied: higher costs closer to walls
-                
                 # Assign distance transform values only to free cells
                 free_space_mask = (dilated_map_for_planning == 0)
                 occ_grid_pyastar[free_space_mask] =  biased_distance_transform[free_space_mask]
@@ -431,7 +344,6 @@ class Mapper():
                 occ_grid_pyastar[dilated_map_for_planning > 0] = np.inf # occupied or unknown
             else:
                 # Unknown as free: lower costs closer to walls
-                
                 # Assign distance transform values to free and unknown spaces 
                 free_or_unknown_space_mask = (dilated_map_for_planning >= 0)
                 occ_grid_pyastar[free_or_unknown_space_mask] =  biased_distance_transform[free_or_unknown_space_mask]
@@ -448,108 +360,7 @@ class Mapper():
         return occ_grid_pyastar
     
     def get_inflated_planning_maps(self, unknown_as_occ=False):
-        #import matplotlib.pyplot as plt
-        #plt.imshow(self.obs_map)
-        #plt.show()
         return self.inflate_map(self.obs_map, unknown_as_occ=False)
 
-    def get_inflated_planning_obs_combined_maps(self, unknown_as_occ=False):
-        #bp()
-        #occ_mask = np.all(self.combined_obs_map == [0,0,255],axis=-1)
-        occ_mask = np.abs(self.combined_obs_map-1)<0.1
-        occ = 1 - np.ones_like(self.gt_map)
-        #print('occ shape', occ.shape)
-        occ[occ_mask] = 1.0
-        dilated_map_for_planning = occ
-        inverted_binary_map_for_planning = occ > 0.5 
-        inverted_dilated_map_for_planning = binary_dilation(inverted_binary_map_for_planning, structure=np.ones((self.dilate_diam_for_planning, self.dilate_diam_for_planning)))
-        dilated_map_for_planning[inverted_dilated_map_for_planning] = 1
 
-        # Get pyastar-compatible cost map
-        occ_grid_pyastar = np.zeros((dilated_map_for_planning.shape[0], dilated_map_for_planning.shape[1]), dtype=np.float32) # 0: free/unknown, np.inf: occupied
-        
-        if self.use_distance_transform_for_planning:
-            # TODO: don't put unknown as occupied
-            # TODO: use_dt should have unknown_as_occ cases
-            distance_transform = scipy.ndimage.distance_transform_cdt(dilated_map_for_planning == 0) * -1 
-            biased_distance_transform = np.clip(distance_transform + self.dt_floor_val, 1, self.dt_floor_val) 
-            if unknown_as_occ: 
-                # Unknown as occupied: higher costs closer to walls
-                
-                # Assign distance transform values only to free cells
-                free_space_mask = (dilated_map_for_planning == 0)
-                occ_grid_pyastar[free_space_mask] =  biased_distance_transform[free_space_mask]
-                
-                occ_grid_pyastar[dilated_map_for_planning > 0] = np.inf # occupied or unknown
-            else:
-                # Unknown as free: lower costs closer to walls
-                
-                # Assign distance transform values to free and unknown spaces 
-                free_or_unknown_space_mask = (dilated_map_for_planning >= 0)
-                occ_grid_pyastar[free_or_unknown_space_mask] =  biased_distance_transform[free_or_unknown_space_mask]
-                occ_grid_pyastar[dilated_map_for_planning == 1] = np.inf
-                
-        else:
-            if unknown_as_occ:
-                occ_grid_pyastar[dilated_map_for_planning == 0] = 1 # free
-                occ_grid_pyastar[dilated_map_for_planning > 0] = np.inf # occupied or unknown
-            else: # unknown is free
-                occ_grid_pyastar[dilated_map_for_planning >= 0] = 1 # free or unknown
-                occ_grid_pyastar[dilated_map_for_planning == 1] = np.inf # occupied
-
-        return occ_grid_pyastar
-
-
-    def get_inflated_planning_pred_combined_maps(self, unknown_as_occ=False):
-        #import pdb; pdb.set_trace()
-        predmap_occ_mask = np.all(self.curr_pred_map == [0,0,255],axis=-1)
-        occ = 1 - np.ones_like(self.gt_map)
-        print('occ shape', occ.shape)
-        occ[predmap_occ_mask] = 1.0
-        dilated_map_for_planning = occ
-        inverted_binary_map_for_planning = occ > 0.5 
-        inverted_dilated_map_for_planning = binary_dilation(inverted_binary_map_for_planning, structure=np.ones((self.dilate_diam_for_planning, self.dilate_diam_for_planning)))
-        dilated_map_for_planning[inverted_dilated_map_for_planning] = 1
-
-        # Get pyastar-compatible cost map
-        occ_grid_pyastar = np.zeros((dilated_map_for_planning.shape[0], dilated_map_for_planning.shape[1]), dtype=np.float32) # 0: free/unknown, np.inf: occupied
-        
-        if self.use_distance_transform_for_planning:
-            # TODO: don't put unknown as occupied
-            # TODO: use_dt should have unknown_as_occ cases
-            distance_transform = scipy.ndimage.distance_transform_cdt(dilated_map_for_planning == 0) * -1 
-            biased_distance_transform = np.clip(distance_transform + self.dt_floor_val, 1, self.dt_floor_val) 
-            if unknown_as_occ: 
-                # Unknown as occupied: higher costs closer to walls
-                
-                # Assign distance transform values only to free cells
-                free_space_mask = (dilated_map_for_planning == 0)
-                occ_grid_pyastar[free_space_mask] =  biased_distance_transform[free_space_mask]
-                
-                occ_grid_pyastar[dilated_map_for_planning > 0] = np.inf # occupied or unknown
-            else:
-                # Unknown as free: lower costs closer to walls
-                
-                # Assign distance transform values to free and unknown spaces 
-                free_or_unknown_space_mask = (dilated_map_for_planning >= 0)
-                occ_grid_pyastar[free_or_unknown_space_mask] =  biased_distance_transform[free_or_unknown_space_mask]
-                occ_grid_pyastar[dilated_map_for_planning == 1] = np.inf
-                
-        else:
-            if unknown_as_occ:
-                occ_grid_pyastar[dilated_map_for_planning == 0] = 1 # free
-                occ_grid_pyastar[dilated_map_for_planning > 0] = np.inf # occupied or unknown
-            else: # unknown is free
-                occ_grid_pyastar[dilated_map_for_planning >= 0] = 1 # free or unknown
-                occ_grid_pyastar[dilated_map_for_planning == 1] = np.inf # occupied
-
-        return occ_grid_pyastar
-
-    def combine_observed_maps(self, obsmap1, obsmap2):
-        #bp()
-        assert obsmap1.shape == obsmap2.shape, "obsmap1 and obsmap2 should have the same shape {} and {}".format(obsmap1.shape, obsmap2.shape)
-        combined_map = obsmap2
-        #unknown_indices_by_r2 = np.where(np.all(obsmap2 == [255,255,255],axis=-1))
-        unknown_indices_by_r2 = np.where(obsmap2==0.5)
-        combined_map[unknown_indices_by_r2] = obsmap1[unknown_indices_by_r2]
-        self.combined_obs_map = combined_map
+    

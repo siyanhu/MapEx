@@ -20,7 +20,6 @@ from shapely.geometry import Polygon, Point, MultiPolygon
 # custom imports
 import sys
 sys.path.append('../')
-from data_factory.gen_building_utils import *
 from sim_utils import makePyOMap
 
 class TimeoutException(Exception):   # Custom exception class
@@ -808,20 +807,10 @@ def get_vis_mask(occupancy_grid, robot_pos, laser_range=50, num_laser=100, rayca
     
     start_time = time.time()
     if raycast_mode == 'simple':
-        # print("using numba, pause here to confirm. If confirmed, delete this line")
-        # import pdb; pdb.set_trace()
-        
         free_points, hit_points, actual_hit_points = get_free_points(occupancy_grid, robot_pos, laser_range=laser_range, num_laser=num_laser)
-        # print("Time for free points (numba):", time.time()-start_time)
-        # print("Hit points:", hit_points)
-        # print("Actual hit points:", actual_hit_points)
 
     elif raycast_mode == 'range_libc': 
-        # print('Getting free points (range_libc)')
         free_points, hit_points, actual_hit_points = get_free_points_range_libc(occupancy_grid, robot_pos, laser_range=laser_range, num_laser=num_laser, occ_map_type=occ_map_type, occ_map_obj=occ_map_obj)
-        # print("Time for free points (range_libc):", time.time()-start_time)
-        # print("Hit points:", hit_points)
-        # print("Actual hit points:", actual_hit_points)
     elif raycast_mode == 'probabilistic':
         free_points, hit_points, actual_hit_points = get_free_points(occupancy_grid, robot_pos, laser_range, num_laser, use_prob=True, hit_prob_thresh=hit_prob_threshold)
     else:
@@ -840,13 +829,10 @@ def get_vis_mask(occupancy_grid, robot_pos, laser_range=50, num_laser=100, rayca
     new_occ_grid = np.ones_like(occupancy_grid) * 0.5
     if len(free_points.shape) == 2:
         new_occ_grid[free_points[:,0], free_points[:,1]] = 0 # free points
-    # import pdb; pdb.set_trace()
     new_occ_grid[hit_points[:,0], hit_points[:,1]] = 1 # hit points
     
 
 
-    # Get vis mask by flood filling free space boundary
-    # flood_fill_start = time.time()
     # # Expand the init flood mask by 1 to avoid internal flood fill boundaries that cause incorrect vis masks
     # # Create a Polygon from the boundary points
     polygon_shape = Polygon(hit_points)
@@ -874,25 +860,9 @@ def get_vis_mask(occupancy_grid, robot_pos, laser_range=50, num_laser=100, rayca
         polygon = Polygon(hit_points)
         interior_point = polygon.representative_point()
         seed_point = (int(interior_point.x), int(interior_point.y))
-    # import pdb; pdb.set_trace()
     flooded_grid = flood_fill_simple(seed_point, inited_flood_grid) #previous
     flooded_grid[inited_boundary_points[:,0], inited_boundary_points[:,1]] = 0.5 # set boundary to 0.5
-    # print("Time for flood fill:", time.time()-flood_fill_start)
-    # else:
-    #     flooded_grid = flood_fill_simple_nonumba(robot_pos, inited_flood_grid) #previous
     vis_ind = np.argwhere(flooded_grid == 0)
-    # plt.subplot(3,1,1)
-    # plt.imshow(occupancy_grid)
-    # plt.plot(hit_points[:,1], hit_points[:,0])
-    # plt.title('Hit points')
-    # plt.subplot(3,1,2)
-    # plt.imshow(inited_flood_grid)
-    # plt.title('Inited flood grid')
-    # plt.subplot(3,1,3)
-    # plt.imshow(flooded_grid)
-    # plt.title('Flooded grid: {}'.format(len(vis_ind)))
-    # plt.show()
-    # import pdb; pdb.set_trace()
     return vis_ind, new_occ_grid, inited_flood_grid, actual_hit_points, flooded_grid
 
 def make_data_folders(data_output_folder_name):
@@ -923,234 +893,11 @@ def make_data_folders(data_output_folder_name):
     print("output_path_dict:", output_path_dict)
     return output_path_dict
 
-def load_process_sc_map(img_path):
-    """
-    Load and process Seungchan map.
-
-    Adding dilation and border to map
-    """
-    # sc_raw = np.load(npy_path)
-    sc_raw = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)/255.
-    # change to 3 class image (0, 0.5, 1) with threshold at 0.33 and 0.66
-    sc_raw_copy = sc_raw.copy()
-    sc_raw_copy[sc_raw<0.33] = 0 #1 # 0 (free) should be 1
-    sc_raw_copy[sc_raw>=0.33] = 0.5#0 # 0.5 (unknown) should be 0
-    sc_raw_copy[sc_raw>=0.66] = 1 #2 # 1 (occupied) should be 2
-    # do a cv2 dilation on sc_raw
-    # sc_raw = cv2.dilate(sc_raw, np.ones((3,3), np.uint8), iterations=1)
-    # add a border to sc_raw
-    # sc_raw = cv2.copyMakeBorder(sc_raw, 2, 2, 2, 2, cv2.BORDER_CONSTANT, value=1)
-    return sc_raw_copy
 
 def convert_01_single_channel_to_0_255_3_channel(img):
     img = np.stack([img, img, img], axis=2)
     img *= 255
-    return img 
-
-def make_sc_map_dataset(map_configs, output_path_dict, num_maps, train_map_paths, test_map_paths):
-    """
-    Make folders of Seungchan maps/masks given paths to training map and test map
-
-    Num_maps: number of maps to generate with. We choose randomly between the maps, so some maps may repeat.
-    """
-    train_mask_count = 0
-    test_mask_count = 0
-
-    map_paths = train_map_paths + test_map_paths    
-    for i in tqdm(range(num_maps), desc='Generating SC exploration maps/masks'):
-        # Decide if train or test given probability
-        if np.random.rand() < map_configs['percent_test']:
-            # choose a random map from test map paths
-            map_path = np.random.choice(test_map_paths)
-            train_or_test = 'test'
-        else:
-            # choose a random map from train map paths
-            map_path = np.random.choice(train_map_paths)
-            train_or_test = 'train'
-
-        occupancy_grid = load_process_sc_map(map_path)
-
-        map, mask_list, local_mask_list, local_gt_list, pose_list = make_masklist_with_rand_traj_in_map(occupancy_grid, map_configs)
-        map = np.stack([map, map, map], axis=2)
-        map *= 255 
-        for mask_i, mask in enumerate(mask_list):
-
-            # make outputs 3 channels
-            
-            mask = np.stack([mask, mask, mask], axis=2)
-            local_mask = np.stack([local_mask_list[mask_i], local_mask_list[mask_i], local_mask_list[mask_i]], axis=2)  
-            local_gt = np.stack([local_gt_list[mask_i], local_gt_list[mask_i], local_gt_list[mask_i]], axis=2)
-            mask *= 255
-            local_mask *= 255
-            local_gt *= 255
-
-
-            # also have a visualization
-            plt_row = 2
-            plt_col = 2
-            plt.figure(figsize=(10,10))
-            plt.subplot(plt_row, plt_col, 1)
-            plt.imshow(map.astype(int))
-            plt.scatter(pose_list[mask_i][1], pose_list[mask_i][0],c='r', s=10)
-            plt.title('Map')
-
-            plt.subplot(plt_row, plt_col, 2)
-            plt.imshow(mask.astype(int))
-            plt.scatter(pose_list[mask_i][1], pose_list[mask_i][0],c='r', s=10)
-            plt.title('Mask')
-
-            plt.subplot(plt_row, plt_col, 3)
-            plt.imshow(local_gt.astype(int))
-            plt.scatter(local_gt.shape[1]//2, local_gt.shape[0]//2,c='r', s=10)
-            plt.title('Local GT')
-
-            plt.subplot(plt_row, plt_col, 4)
-            plt.imshow(local_mask.astype(int))
-            plt.scatter(local_mask.shape[1]//2, local_mask.shape[0]//2,c='r', s=10)
-            plt.title('Local Mask')
-
-            # saving
-            if train_or_test == 'train':
-                map_path = os.path.join(output_path_dict[train_or_test+'_global_map_folder_path'], '{:06d}.png'.format(train_mask_count))
-                mask_path = os.path.join(output_path_dict[train_or_test+'_global_mask_folder_path'], '{:06d}.png'.format(train_mask_count))
-                ego_map_path = os.path.join(output_path_dict[train_or_test+'_ego_map_folder_path'], '{:06d}.png'.format(train_mask_count))
-                ego_mask_path = os.path.join(output_path_dict[train_or_test+'_ego_mask_folder_path'], '{:06d}.png'.format(train_mask_count))
-                plt.savefig(os.path.join(output_path_dict[train_or_test+'_viz_folder_path'], '{:06d}.png'.format(train_mask_count)))
-                train_mask_count += 1
-            else:
-                map_path = os.path.join(output_path_dict[train_or_test+'_global_map_folder_path'], '{:06d}.png'.format(test_mask_count))
-                mask_path = os.path.join(output_path_dict[train_or_test+'_global_mask_folder_path'], '{:06d}.png'.format(test_mask_count))
-                ego_map_path = os.path.join(output_path_dict[train_or_test+'_ego_map_folder_path'], '{:06d}.png'.format(test_mask_count))
-                ego_mask_path = os.path.join(output_path_dict[train_or_test+'_ego_mask_folder_path'], '{:06d}.png'.format(test_mask_count))
-                plt.savefig(os.path.join(output_path_dict[train_or_test+'_viz_folder_path'], '{:06d}.png'.format(test_mask_count)))
-                test_mask_count += 1
-            
-            cv2.imwrite(map_path, map)
-            cv2.imwrite(mask_path, mask)   
-            cv2.imwrite(ego_map_path, local_gt)
-            cv2.imwrite(ego_mask_path, local_mask)
-            plt.close()
-
-def make_toy_forest_dataset(map_configs, output_path_dict, num_maps, save_viz=False):
-    """
-    Make folders of synthetic buildings and masks for training and testing.
-
-    Num_maps: number of maps to generate with. We choose randomly between the maps, so some maps may repeat.
-    """
-    train_mask_count = 0
-    test_mask_count = 0
-
-    for i in tqdm(range(num_maps), desc='Generating toy forest masks. # maps: '):
-        # Decide if train or test given probability
-        if np.random.rand() < map_configs['percent_test']:
-            train_or_test = 'test'
-        else:
-            # choose a random map from train map paths
-            train_or_test = 'train'
-
-        # make a random forest occupancy grid
-        # TODO: make random forest occ grid generation into a function
-        occ_map = np.ones((100,100), dtype=np.uint8) * 2 # start as free space
-        # add walls at the border
-        occ_map[0, :] = 1 # wall
-        occ_map[-1, :] = 1 # wall
-        occ_map[:, 0] = 1 # wall
-        occ_map[:, -1] = 1 # wall
-
-        # add a number of trees at random positions
-        num_trees = np.random.randint(30, 70)
-        for _ in range(num_trees):
-            tree_radius = np.random.randint(3, 7)
-            tree_row = np.random.randint(0, occ_map.shape[0]-tree_radius)
-            tree_col = np.random.randint(0, occ_map.shape[1]-tree_radius)
-            # add tree as a circle
-            for i in range(occ_map.shape[0]):
-                for j in range(occ_map.shape[1]):
-                    # calculate the distance from the current element to the center of the array
-                    dist = np.sqrt((i - tree_row)**2 + (j - tree_col)**2)
-                    
-                    # if the distance is less than the radius, set the element to 1
-                    if dist < tree_radius:
-                        occ_map[i, j] = 1
-        # randomize whether to transpose
-        if np.random.rand() < 0.5:
-            occ_map = np.transpose(occ_map)
-
-        # TODO: move this to a function
-        # convert occ_map to what is needed for mask_utils 
-        # before: (0: unknown, 1: occupied, 2: free)
-        # after: (0: free, 0.5: unknown, 1: occupied)
-        occ_map_copy = np.zeros_like(occ_map).astype(np.float32)
-        occ_map_copy[occ_map == 2] = 0
-        occ_map_copy[occ_map == 1] = 1
-        occ_map_copy[occ_map == 0] = 0.5
-        occ_map = occ_map_copy
-
-        map, mask_list, local_mask_list, local_gt_list, pose_list = make_masklist_with_rand_traj_in_map(occ_map, map_configs)
-        map = np.stack([map, map, map], axis=2)
-        map *= 255 
-        for mask_i, mask in enumerate(mask_list):
-
-            # make outputs 3 channels
-            
-            mask = np.stack([mask, mask, mask], axis=2)
-            local_mask = np.stack([local_mask_list[mask_i], local_mask_list[mask_i], local_mask_list[mask_i]], axis=2)  
-            local_gt = np.stack([local_gt_list[mask_i], local_gt_list[mask_i], local_gt_list[mask_i]], axis=2)
-            mask *= 255
-            local_mask *= 255
-            local_gt *= 255
-
-
-            # # also have a visualization
-            if save_viz:
-                plt_row = 2
-                plt_col = 2
-                plt.figure(figsize=(10,10))
-                plt.subplot(plt_row, plt_col, 1)
-                plt.imshow(map.astype(int))
-                plt.scatter(pose_list[mask_i][1], pose_list[mask_i][0],c='r', s=10)
-                plt.title('Map')
-
-                plt.subplot(plt_row, plt_col, 2)
-                plt.imshow(mask.astype(int))
-                plt.scatter(pose_list[mask_i][1], pose_list[mask_i][0],c='r', s=10)
-                plt.title('Mask')
-
-                plt.subplot(plt_row, plt_col, 3)
-                plt.imshow(local_gt.astype(int))
-                plt.scatter(local_gt.shape[1]//2, local_gt.shape[0]//2,c='r', s=10)
-                plt.title('Local GT')
-
-                plt.subplot(plt_row, plt_col, 4)
-                plt.imshow(local_mask.astype(int))
-                plt.scatter(local_mask.shape[1]//2, local_mask.shape[0]//2,c='r', s=10)
-                plt.title('Local Mask')
-
-            # saving
-            if train_or_test == 'train':
-                map_path = os.path.join(output_path_dict[train_or_test+'_global_map_folder_path'], '{:06d}.png'.format(train_mask_count))
-                mask_path = os.path.join(output_path_dict[train_or_test+'_global_mask_folder_path'], '{:06d}.png'.format(train_mask_count))
-                ego_map_path = os.path.join(output_path_dict[train_or_test+'_ego_map_folder_path'], '{:06d}.png'.format(train_mask_count))
-                ego_mask_path = os.path.join(output_path_dict[train_or_test+'_ego_mask_folder_path'], '{:06d}.png'.format(train_mask_count))
-                if save_viz:
-                    plt.savefig(os.path.join(output_path_dict[train_or_test+'_viz_folder_path'], '{:06d}.png'.format(train_mask_count)))
-                train_mask_count += 1
-            else:
-                map_path = os.path.join(output_path_dict[train_or_test+'_global_map_folder_path'], '{:06d}.png'.format(test_mask_count))
-                mask_path = os.path.join(output_path_dict[train_or_test+'_global_mask_folder_path'], '{:06d}.png'.format(test_mask_count))
-                ego_map_path = os.path.join(output_path_dict[train_or_test+'_ego_map_folder_path'], '{:06d}.png'.format(test_mask_count))
-                ego_mask_path = os.path.join(output_path_dict[train_or_test+'_ego_mask_folder_path'], '{:06d}.png'.format(test_mask_count))
-                if save_viz:
-                    plt.savefig(os.path.join(output_path_dict[train_or_test+'_viz_folder_path'], '{:06d}.png'.format(test_mask_count)))
-                test_mask_count += 1
-            
-            cv2.imwrite(map_path, map)
-            cv2.imwrite(mask_path, mask)   
-            cv2.imwrite(ego_map_path, local_gt)
-            cv2.imwrite(ego_mask_path, local_mask)
-            if save_viz:
-                plt.close()
-
+    return img
 
 def convert_012_labels_to_maskutils_labels(occ_map):
     """Converts occupancy map that is of 012 label (0: unknown, 1: occupied, 2: free) 
@@ -1251,175 +998,6 @@ def make_kth_mask_onemap(pgm_path, map_configs, output_path_dict, map_i):
         cv2.imwrite(ego_map_path, local_gt)
         cv2.imwrite(ego_mask_path, local_mask)
         plt.close()
-
-
-def make_toy_building_dataset(map_configs, output_path_dict, num_maps, max_workers):
-    """
-    Make folders of synthetic buildings and masks for training and testing.
-
-    Num_maps: number of maps to generate with. We choose randomly between the maps, so some maps may repeat.
-    """
-
-
-    # for map_i in tqdm(range(num_maps), desc='Generating toy building masks. # maps: '):
-    #     make_toy_building_dataset_onemap([map_configs, output_path_dict, map_i]) 
-    r = process_map(make_toy_building_dataset_onemap, [(map_configs, output_path_dict, map_i) for map_i in range(num_maps)], max_workers=max_workers)
-
-def make_toy_building_dataset_onemap(args):
-    """
-    Make toy building dataset and write images for one map. 
-
-    The file names will be prefixed with map_i so we can parallelize
-    """
-    # map_configs, output_path_dict, map_i
-    map_configs = args[0]
-    output_path_dict = args[1]
-    map_i = args[2]
-    
-    train_mask_count = 0
-    test_mask_count = 0
-
-    # Decide if train or test given probability
-    if np.random.rand() < map_configs['percent_test']:
-        train_or_test = 'test'
-    else:
-        # choose a random map from train map paths
-        train_or_test = 'train'
-
-    # make a random building occupancy grid
-    building_occ_map = make_building_occ_map()
-
-    # randomize whether to flip horizontally 
-    if np.random.rand() < 0.5:
-        building_occ_map = building_occ_map[:, ::-1]
-
-    # randomize whether to transpose
-    if np.random.rand() < 0.5:
-        building_occ_map = np.transpose(building_occ_map)
-
-    # TODO: move this to a function
-    # convert occ_map to what is needed for mask_utils 
-    # before: (0: unknown, 1: occupied, 2: free)
-    # after: (0: free, 0.5: unknown, 1: occupied)
-    building_occ_map = convert_012_labels_to_maskutils_labels(building_occ_map)
-
-    map, mask_list, local_mask_list, local_gt_list, pose_list = make_masklist_with_rand_traj_in_map(building_occ_map, map_configs)
-    map = np.stack([map, map, map], axis=2)
-    map *= 255 
-    for mask_i, mask in enumerate(mask_list):
-
-        # make outputs 3 channels
-        
-        mask = np.stack([mask, mask, mask], axis=2)
-        local_mask = np.stack([local_mask_list[mask_i], local_mask_list[mask_i], local_mask_list[mask_i]], axis=2)  
-        local_gt = np.stack([local_gt_list[mask_i], local_gt_list[mask_i], local_gt_list[mask_i]], axis=2)
-        mask *= 255
-        local_mask *= 255
-        local_gt *= 255
-
-
-        # # also have a visualization
-        # plt_row = 2
-        # plt_col = 2
-        # plt.figure(figsize=(10,10))
-        # plt.subplot(plt_row, plt_col, 1)
-        # plt.imshow(map.astype(int))
-        # plt.scatter(pose_list[mask_i][1], pose_list[mask_i][0],c='r', s=10)
-        # plt.title('Map')
-
-        # plt.subplot(plt_row, plt_col, 2)
-        # plt.imshow(mask.astype(int))
-        # plt.scatter(pose_list[mask_i][1], pose_list[mask_i][0],c='r', s=10)
-        # plt.title('Mask')
-
-        # plt.subplot(plt_row, plt_col, 3)
-        # plt.imshow(local_gt.astype(int))
-        # plt.scatter(local_gt.shape[1]//2, local_gt.shape[0]//2,c='r', s=10)
-        # plt.title('Local GT')
-
-        # plt.subplot(plt_row, plt_col, 4)
-        # plt.imshow(local_mask.astype(int))
-        # plt.scatter(local_mask.shape[1]//2, local_mask.shape[0]//2,c='r', s=10)
-        # plt.title('Local Mask')
-
-        # saving
-        if train_or_test == 'train':
-            map_path = os.path.join(output_path_dict[train_or_test+'_global_map_folder_path'], '{:06d}_{:06d}.png'.format(map_i, train_mask_count))
-            mask_path = os.path.join(output_path_dict[train_or_test+'_global_mask_folder_path'], '{:06d}_{:06d}.png'.format(map_i, train_mask_count))
-            ego_map_path = os.path.join(output_path_dict[train_or_test+'_ego_map_folder_path'], '{:06d}_{:06d}.png'.format(map_i, train_mask_count))
-            ego_mask_path = os.path.join(output_path_dict[train_or_test+'_ego_mask_folder_path'],'{:06d}_{:06d}.png'.format(map_i, train_mask_count))
-            # plt.savefig(os.path.join(output_path_dict[train_or_test+'_viz_folder_path'], '{:06d}.png'.format(train_mask_count)))
-            train_mask_count += 1
-        else:
-            map_path = os.path.join(output_path_dict[train_or_test+'_global_map_folder_path'], '{:06d}_{:06d}.png'.format(map_i, test_mask_count))
-            mask_path = os.path.join(output_path_dict[train_or_test+'_global_mask_folder_path'], '{:06d}_{:06d}.png'.format(map_i, test_mask_count))
-            ego_map_path = os.path.join(output_path_dict[train_or_test+'_ego_map_folder_path'], '{:06d}_{:06d}.png'.format(map_i, test_mask_count))
-            ego_mask_path = os.path.join(output_path_dict[train_or_test+'_ego_mask_folder_path'], '{:06d}_{:06d}.png'.format(map_i, test_mask_count))
-            # plt.savefig(os.path.join(output_path_dict[train_or_test+'_viz_folder_path'], '{:06d}.png'.format(test_mask_count)))
-            test_mask_count += 1
-        
-        cv2.imwrite(map_path, map)
-        cv2.imwrite(mask_path, mask)   
-        cv2.imwrite(ego_map_path, local_gt)
-        cv2.imwrite(ego_mask_path, local_mask)
-        plt.close()
-
-def make_synthetic_map_mask_dataset(map_configs, num_maps, output_path_dict):
-    """ 
-    Make folders of maps given configs
-
-    Args:
-        map_configs: dictionary of configurations
-        num_maps: number of maps to generate
-        output_path_dict: dictionary of output paths
-    """
-    train_mask_count = 0
-    test_mask_count = 0
-    for i in tqdm(range(num_maps), desc='Generating synthetic exploration maps'):
-        # Decide if train or test given probability
-        if np.random.rand() < map_configs['percent_test']:
-            train_or_test = 'test'
-        else:
-            train_or_test = 'train'
-        
-        map, mask_list = make_synthetic_map_with_rand_trajs(map_configs)
-        map = np.stack([map, map, map], axis=2)
-        map *= 255 
-        for mask in mask_list:
-            
-
-
-            # make outputs 3 channels
-            
-            mask = np.stack([mask, mask, mask], axis=2)
-            
-            mask *= 255
-
-            # also have a visualization
-            plt_row = 1
-            plt_col = 2
-            plt.figure(figsize=(5,2))
-            plt.subplot(plt_row, plt_col, 1)
-            plt.imshow(map)
-            plt.title('Map')
-            plt.subplot(plt_row, plt_col, 2)
-            plt.imshow(mask)
-            plt.title('Mask')
-            if train_or_test == 'train':
-                map_path = os.path.join(output_path_dict[train_or_test+'_map_folder_path'], '{:06d}.png'.format(train_mask_count))
-                mask_path = os.path.join(output_path_dict[train_or_test+'_mask_folder_path'], '{:06d}.png'.format(train_mask_count))
-                plt.savefig(os.path.join(output_path_dict[train_or_test+'_viz_folder_path'], '{:06d}.png'.format(train_mask_count)))
-                train_mask_count += 1
-            else:
-                map_path = os.path.join(output_path_dict[train_or_test+'_map_folder_path'], '{:06d}.png'.format(test_mask_count))
-                mask_path = os.path.join(output_path_dict[train_or_test+'_mask_folder_path'], '{:06d}.png'.format(test_mask_count))
-                plt.savefig(os.path.join(output_path_dict[train_or_test+'_viz_folder_path'], '{:06d}.png'.format(test_mask_count)))
-                test_mask_count += 1
-            
-            cv2.imwrite(map_path, map)
-            cv2.imwrite(mask_path, mask)   
-            plt.close()
-
 
 def crop_around_point(image, center, crop_size):
     """

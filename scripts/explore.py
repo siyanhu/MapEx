@@ -98,7 +98,7 @@ def reselect_frontier_from_frontier_region_centers(frontier_region_centers, tota
 def determine_local_planner(mode):
     if mode == 'upen':
         return 'astar'
-    elif mode in ['nearest', 'visvar', 'visvarsubsample', 'visunk', 'obsunk', 'onlyvar', 'onlyvarsubsample', 'onlyvarsmall', 'onlyvarsubsamplesmall', 'visgtvarsubsample', 'visgtvar', 'visgtunk', 'visvarsubsampleprob','visunkprob']:
+    elif mode in ['nearest', 'visvar', 'visunk', 'obsunk', 'onlyvar', 'visvarprob']:
         return 'astar'
     elif mode == 'hector' or mode == 'hectoraug':
         return 'gradient'
@@ -324,8 +324,7 @@ def run_exploration_for_map(occ_map, exp_title, models_list,lama_alltrain_model,
                         frontier_region_centers, frontier_cost_list, viz_most_flooded_grid, viz_medium_flooded_grid, best_ind, medium_ind = \
                                 frontier_planner.score_frontiers(hector_frontier_region_centers_unscored, cur_pose, \
                                                                 pose_list, pred_maputils, pred_vis_configs, \
-                                                                    obs_map=padded_obs_map, mean_map=mean_map, var_map=var_map, subsampled_var_map=lama_reduced_pred_var, \
-                                                                        gt_map=padded_gt_map)
+                                                                    obs_map=padded_obs_map, mean_map=mean_map, var_map=var_map)
 
             # Get inflated obs map for local planner
             occ_grid_pyastar = mapper.get_inflated_planning_maps(unknown_as_occ=unknown_as_occ)   
@@ -436,9 +435,7 @@ def run_exploration_for_map(occ_map, exp_title, models_list,lama_alltrain_model,
                         frontier_region_centers, frontier_cost_list, viz_most_flooded_grid, viz_medium_flooded_grid, best_ind, medium_ind = \
                                 frontier_planner.score_frontiers(frontier_region_centers_unscored, cur_pose, \
                                                                 pose_list, pred_maputils, pred_vis_configs, \
-                                                                    obs_map=padded_obs_map, mean_map=mean_map, var_map=var_map, subsampled_var_map=lama_reduced_pred_var, \
-                                                                        gt_map=padded_gt_map)    
-    
+                                                                    obs_map=padded_obs_map, mean_map=mean_map, var_map=var_map)
                         locked_frontier_center = frontier_region_centers[np.argmin(frontier_cost_list)]
 
                         while not is_locked_frontier_center_valid(locked_frontier_center, occ_grid_pyastar, cur_pose, collect_opts, pixel_per_meter):
@@ -601,7 +598,7 @@ def run_exploration_for_map(occ_map, exp_title, models_list,lama_alltrain_model,
                     ax_pred.imshow(obs_unk_mask, cmap=obs_unk_mask_cmap, alpha=obs_unk_mask_alpha)
 
                     path_color = "green"
-                    if mode == 'visvarsubsampleprob':
+                    if mode == 'visvarprob':
                         path_color = "#eb4205" #coral(red)
                     if mode == 'upen':
                         path_color = "green"

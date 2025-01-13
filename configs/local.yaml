@@ -7,11 +7,13 @@ train_test_world_split_path: 'data_factory/train_test_worlds_split_1127.json'
 collect_world_list: ['50052750']
 output_root_path: '/home/seungchan/MapEx/experiments/' #customize this path, this is where your experiment results will be saved
 
-
 start_pose: [513,880]
 cur_pose_dist_threshold_m: 1
 
-modes_to_test: ['nearest', 'obsunk', 'onlyvar', 'visunk', 'visvar', 'visvarprob', 'upen', 'hector', 'hectoraug']
+modes_to_test: ['nearest', 'obsunk', 'onlyvar', 'visunk', 'visvar', 'visvarprob', 'upen', 'hector', 'hectoraug'] #all methods
+#modes_to_test: ['nearest', 'upen', 'hectoraug', 'visvarprob'] #MapEx vs baselines
+#modes_to_test: ['obsunk', 'onlyvar', 'visunk', 'visvar', 'visvarprob'] #ablations
+#modes_to_test: ['visvarprob'] #MapEx
 
 unknown_as_occ: true
 use_distance_transform_for_planning: true 
