@@ -48,20 +48,20 @@ The `pretrained_model' directory and its subdirectories should be organized as b
 
     MapEx
     ├── pretrained_models
-    │   ├── weights
-    │   │   │   ├── big_lama
-    │   │   │   │   ├── models
-    │   │   │   │   │   ├── best.ckpt
-    │   │   │   ├── lama_ensemble
-    │   │   │   │   ├── train_1
-    │   │   │   │   │   ├── models
-    │   │   │   │   │   │   ├── best.ckpt
-    │   │   │   │   ├── train_2
-    │   │   │   │   │   ├── models
-    │   │   │   │   │   │   ├── best.ckpt
-    │   │   │   │   ├── train_3
-    │   │   │   │   │   ├── models
-    │   │   │   │   │   │   ├── best.ckpt
+        ├── weights
+            ├── big_lama
+                ├── models
+                    ├── best.ckpt
+            ├── lama_ensemble
+                ├── train_1
+                    ├── models
+                        ├── best.ckpt
+                ├── train_2
+                    ├── models
+                        ├── best.ckpt
+                ├── train_3
+                    ├── models
+                        ├── best.ckpt    
 
 ### Run MapEx
 In order to run MapEx
