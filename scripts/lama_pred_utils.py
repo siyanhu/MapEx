@@ -6,10 +6,8 @@ from omegaconf import OmegaConf
 import yaml
 from torch.utils.data._utils.collate import default_collate
 
-import sys 
-# sys.path.append('/ocean/projects/cis220039p/cherieho/map-explore/lama')
-sys.path.append('../../lama')
-# sys.path.append('../../../../lama')
+import sys
+sys.path.append('../lama')
 from saicinpainting.training.trainers import load_checkpoint
 from saicinpainting.training.data.datasets import get_transforms
 from saicinpainting.evaluation.utils import move_to_device
