@@ -30,12 +30,23 @@
 
 ## Table of Contents
 
+### Set up Mamba environment
+Mamba is a package manger used for managing python environments and dependencies, known for having better speed and efficiency than conda. For more information, please refer to this <a href="https://mamba.readthedocs.io/en/latest/user_guide/mamba.html">link</a>. 
 
-### Install using pip
-You can install all requirements using pip by running:
+    wget https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-Linux-x86_64.sh
+    bash Mambaforge-Linux-x86_64.sh
 
-    pip install -r mapper/requirements.txt
+Go to `lama` submodule folder, and create `lama` environment. 
 
+    cd ~/MapEx/lama
+    mamba env create -f conda_env.yml
+    mamba activate lama
+
+Install `torch` and relevant packages
+
+    mamba install pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch --y
+    mamba install wandb --yes
+    pip install pytorch-lightning==1.2.9
 
 ### Download pretrained prediction models (KTH dataset)
 You can download pretrained models from this <a href="https://drive.google.com/drive/u/0/folders/1u9WZ9ftwaMbP-RVySuNSVEdUDV_x4Dw6">link</a>. Place the zip file under `pretrained_models` directory and unzip the file. 
@@ -62,6 +73,18 @@ The `pretrained_model` directory and its subdirectories should be organized as b
                 ├── train_3
                     ├── models
                         ├── best.ckpt    
+
+### Install lib_rangec
+Go to `range_libc` directory and install by following:
+
+    cd ~/MapEx/lib_rangec/pywrapper
+    python3 setup.py install 
+    pip3 install Cython
+
+### Install KTH toolbox dependencies for raycasting and observation model
+
+    python3 -m pip install pyastar2d
+    mamba install numba --yes
 
 ### Run MapEx
 In order to run MapEx
