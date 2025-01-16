@@ -86,11 +86,28 @@ Go to `range_libc` directory and install by following:
     python3 -m pip install pyastar2d
     mamba install numba --yes
 
-### Run MapEx
-In order to run MapEx
+### Experiments (Running MapEx, baselines, and ablations)
+In order to test MapEx, run the `explore.py` script. 
 
     cd scripts/
     python3 explore.py
+
+This will automatically call `base.yaml`, which contains default parameters and specifies filepaths, environment, and starting conditions. If you want to customize parameters, generate your own yaml file and save it in the `configs` directory. 
+
+`modes_to_test` in the yaml file specifies the methods that you evaluate. Specifically,  
+
+    modes_to_test: ['visvarprob'] #if you just want to test MapEx
+    modes_to_test: ['nearest', 'upen', 'hectoraug', 'visvarprob'] #if you want to compare MapEx and baselines
+    modes_to_test: ['obsunk', 'onlyvar', 'visunk', 'visvar', 'visvarprob'] #if you want ablation experiments
+    modes_to_test: ['nearest', 'obsunk', 'onlyvar', 'visunk', 'visvar', 'visvarprob', 'upen', 'hector', 'hectoraug'] #if you want to test all methods 
+
+`visvarprob` corresponds to the `MapEx` method, meaning the combination of visibility mask, variance, and probabilistic raycast. `nearest` is nearest frontier-based exploration, `upen` is our implementation of uncertainty-driven planner, proposed by Georgakis et al. ICRA 2022, and `hectoraug` is our implementation of IG-hector method proposed by Shrestha et al. ICRA 2019.
+
+Ablated methods: `visvar` (visibility mask + variance + deterministic raycast), `visunk` (visibility mask + counting number of pixels in the area), `obsunk` (visibility mask on observed occupancy grid + counting number of pixels in the area), `onlyvar` (using no visibility mask, but only summing variances) correspond with Deterministic, No Variance, Observed Map, and No Visibility methods in the ablation studies section of our original paper. 
+
+Moreover, if you want to specifiy environment and starting positions as arguments to the script. For example, 
+
+    python3 explore.py --collect_world_list 50010535_PLAN1 --start_pose 768 551
 
 ## Citation
 
