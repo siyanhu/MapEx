@@ -108,7 +108,7 @@ The list of environments is in the `kth_test_maps` directory. The list of start_
     modes_to_test: ['obsunk', 'onlyvar', 'visunk', 'visvar', 'visvarprob'] #if you want ablation experiments
     modes_to_test: ['nearest', 'obsunk', 'onlyvar', 'visunk', 'visvar', 'visvarprob', 'upen', 'hector', 'hectoraug'] #if you want to test all methods 
 
-`visvarprob` corresponds to the `MapEx` method, meaning the combination of visibility mask, variance, and probabilistic raycast. `nearest` is nearest frontier-based exploration, `upen` is our implementation of uncertainty-driven planner, proposed by Georgakis et al. ICRA 2022, and `hectoraug` is our implementation of IG-hector method proposed by Shrestha et al. ICRA 2019.
+`visvarprob` corresponds to the `MapEx` method, meaning the combination of visibility mask, variance, and probabilistic raycast. `nearest` is nearest frontier-based exploration, `upen` is our implementation of uncertainty-driven planner, proposed by <a href="https://arxiv.org/abs/2202.11907">Georgakis et al. ICRA 2022</a>, and `hectoraug` is our implementation of IG-hector method proposed by <a href="https://ieeexplore.ieee.org/document/8793769">Shrestha et al. ICRA 2019</a>.
 
 <strong>Ablated methods</strong>: `visvar` (visibility mask + variance + deterministic raycast), `visunk` (visibility mask + counting number of pixels in the area), `obsunk` (visibility mask on observed occupancy grid + counting number of pixels in the area), `onlyvar` (using no visibility mask, but only summing variances) correspond with Deterministic, No Variance, Observed Map, and No Visibility methods in the ablation studies section of our original paper. 
 
