@@ -28,7 +28,7 @@
   <div align="center"></div>
 
 
-## Table of Contents
+## Preliminary Setup
 
 ### Set up Mamba environment
 Mamba is a package manger used for managing python environments and dependencies, known for having better speed and efficiency than conda. For more information, please refer to this <a href="https://mamba.readthedocs.io/en/latest/user_guide/mamba.html">link</a>. 
@@ -86,7 +86,9 @@ Go to `range_libc` directory and install by following:
     python3 -m pip install pyastar2d
     mamba install numba --yes
 
-### Experiments (Running MapEx, baselines, and ablations)
+## Experiments
+
+### Run MapEx planner with baselines
 In order to test MapEx, run the `explore.py` script. 
 
     cd scripts/
@@ -111,6 +113,13 @@ The list of environments is in the `kth_test_maps` directory. The list of start_
 `visvarprob` corresponds to the `MapEx` method, meaning the combination of visibility mask, variance, and probabilistic raycast. `nearest` is nearest frontier-based exploration, `upen` is our implementation of uncertainty-driven planner, proposed by <a href="https://arxiv.org/abs/2202.11907">Georgakis et al. ICRA 2022</a>, and `hectoraug` is our implementation of IG-hector method proposed by <a href="https://ieeexplore.ieee.org/document/8793769">Shrestha et al. ICRA 2019</a>.
 
 <strong>Ablated methods</strong>: `visvar` (visibility mask + variance + deterministic raycast), `visunk` (visibility mask + counting number of pixels in the area), `obsunk` (visibility mask on observed occupancy grid + counting number of pixels in the area), `onlyvar` (using no visibility mask, but only summing variances) correspond with Deterministic, No Variance, Observed Map, and No Visibility methods in the ablation studies section of our original paper. 
+
+## Evaluations, Metric, and Data Processing
+
+### Coverage and Predicted IoU
+
+### Topological Understanding (TU)
+
 
 ## Citation
 
