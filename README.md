@@ -29,6 +29,9 @@
 
 
 ## Preliminary Setup
+Clone the repository
+
+    git clone git@github.com:castacks/MapEx.git
 
 ### Set up Mamba environment
 Mamba is a package manger used for managing python environments and dependencies, known for having better speed and efficiency than conda. For more information, please refer to this <a href="https://mamba.readthedocs.io/en/latest/user_guide/mamba.html">link</a>. 
