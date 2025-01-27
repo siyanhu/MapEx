@@ -1,7 +1,7 @@
 <p align="center">
 <h1 align="center">MapEx: Indoor Structure Exploration with Probabilistic Information Gain from Global Map Predictions</h1>
 <h3 class="is-size-5 has-text-weight-bold" style="color: orange;" align="center">
-    Venue
+    International Conference on Robotics and Automation (ICRA) 2025 
 </h3>
   <p align="center">
     <a href="https://cherieho.com/" target="_blank"><strong>Cherie Ho*</strong></a>
