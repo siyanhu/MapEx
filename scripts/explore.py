@@ -26,7 +26,7 @@ import upen_baseline
 import matplotlib
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
-
+from datetime import datetime
 
 def get_options_dict_from_yml(config_name):
     cwd = os.getcwd()
@@ -778,7 +778,8 @@ def determine_use_model(mode):
 
 if __name__ == '__main__':
     data_collect_config_name = 'base.yaml' #customize yaml file, as needed
-    output_subdirectory_name = '20250110_test' #customize subdirectory to save experiment results, as needed
+    today = datetime.today()
+    output_subdirectory_name = str(today.year)+"{:02d}".format(today.month)+"{:02d}".format(today.day)+'_test'
     parser = argparse.ArgumentParser()
     parser.add_argument('--collect_world_list', nargs='+', help='List of worlds to collect data from')
     parser.add_argument('--start_pose', nargs='+', help='List of start pose')
