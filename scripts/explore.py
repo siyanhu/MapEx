@@ -761,7 +761,19 @@ def run_exploration_for_map(occ_map, exp_title, models_list,lama_alltrain_model,
         update_mission_status(start_time=start_exp_time, cur_step=t, mission_complete=False, fail_reason=str(e), mission_status_save_path=mission_status_save_path)
     
 def determine_use_model(mode):
-    return True
+    possible_mode_list = 'nearest', 'obsunk', 'onlyvar', 'visunk', 'visvar', 'visvarprob', 'upen', 'hectoraug'
+    assert mode in possible_mode_list, "mode must be one of {}".format(possible_mode_list)
+    if mode == 'onlyvar' or mode == 'visunk' or mode == 'visvar' or mode == 'visvarprob':
+        use_model = True 
+    elif mode == 'nearest' or mode == 'obsunk': 
+        use_model = False
+    elif mode == 'hectoraug':
+        use_model = True
+    elif mode == 'upen':
+        use_model = True
+    else:
+        raise NotImplementedError
+    return use_model
 
 
 if __name__ == '__main__':

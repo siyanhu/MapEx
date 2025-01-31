@@ -10,7 +10,7 @@ output_folder_name: 'experiments'
 start_pose: [513,880]
 cur_pose_dist_threshold_m: 1
 
-modes_to_test: ['nearest', 'obsunk', 'onlyvar', 'visunk', 'visvar', 'visvarprob', 'upen', 'hector', 'hectoraug'] #all methods
+modes_to_test: ['nearest', 'obsunk', 'onlyvar', 'visunk', 'visvar', 'visvarprob', 'upen', 'hectoraug'] #all methods
 #modes_to_test: ['nearest', 'upen', 'hectoraug', 'visvarprob'] #MapEx vs baselines
 #modes_to_test: ['obsunk', 'onlyvar', 'visunk', 'visvar', 'visvarprob'] #ablations
 #modes_to_test: ['visvarprob'] #MapEx
