@@ -784,6 +784,13 @@ if __name__ == '__main__':
     kth_map_folder_path = os.path.join(collect_opts.root_path, 'kth_test_maps')
     kth_map_paths = os.listdir(kth_map_folder_path)
 
+    if collect_opts.collect_world_list is not None:
+        kth_map_paths_collect = []
+        for folder_name in kth_map_paths:
+            if folder_name in collect_opts.collect_world_list:
+                kth_map_paths_collect.append(folder_name)
+        kth_map_paths = kth_map_paths_collect
+
     assert not (collect_opts.test_world_only and collect_opts.collect_world_list is not None), "Only one of test_world_only and collect_world_list can be true"
     kth_map_folder_paths = [os.path.join(kth_map_folder_path, p) for p in kth_map_paths] * collect_opts.num_data_per_world
 
