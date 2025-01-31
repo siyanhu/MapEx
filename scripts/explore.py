@@ -765,7 +765,7 @@ def determine_use_model(mode):
 
 
 if __name__ == '__main__':
-    data_collect_config_name = 'local.yaml' #customize yaml file, as needed
+    data_collect_config_name = 'base.yaml' #customize yaml file, as needed
     output_subdirectory_name = '20250110_test' #customize subdirectory to save experiment results, as needed
     parser = argparse.ArgumentParser()
     parser.add_argument('--collect_world_list', nargs='+', help='List of worlds to collect data from')
@@ -781,14 +781,14 @@ if __name__ == '__main__':
             start_pose.append(int(pose_elem))
         collect_opts.start_pose = start_pose
 
-    kth_map_folder_path = os.path.join(collect_opts.root_path, '/kth_test_maps/')
+    kth_map_folder_path = os.path.join(collect_opts.root_path, 'kth_test_maps')
     kth_map_paths = os.listdir(kth_map_folder_path)
 
     assert not (collect_opts.test_world_only and collect_opts.collect_world_list is not None), "Only one of test_world_only and collect_world_list can be true"
     kth_map_folder_paths = [os.path.join(kth_map_folder_path, p) for p in kth_map_paths] * collect_opts.num_data_per_world
 
     # Make output_subdirectory_name if it doesn't exist 
-    output_root_dir = os.path.join(collect_opts.root_path, collect_opts.folder_name, output_subdirectory_name)
+    output_root_dir = os.path.join(collect_opts.root_path, collect_opts.output_folder_name, output_subdirectory_name)
     if not os.path.exists(output_root_dir):
         os.makedirs(output_root_dir)
     
