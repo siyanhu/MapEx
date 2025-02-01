@@ -45,11 +45,11 @@ Go to `lama` submodule folder, and create `lama` environment.
     mamba env create -f conda_env.yml
     mamba activate lama
 
-Install `torch` and relevant packages
+<!-- Install `torch` and relevant packages
 
     mamba install pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch --y
     mamba install wandb --yes
-    pip install pytorch-lightning==1.2.9
+    pip install pytorch-lightning==1.2.9 -->
 
 ### Download pretrained prediction models (KTH dataset)
 You can download pretrained models from this <a href="https://drive.google.com/drive/u/0/folders/1u9WZ9ftwaMbP-RVySuNSVEdUDV_x4Dw6">link</a>. Place the zip file under `pretrained_models` directory and unzip the file. 
