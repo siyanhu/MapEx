@@ -119,6 +119,37 @@ The list of environments is in the `kth_test_maps` directory. The list of start_
 
 ## Evaluations, Metric, and Data Processing
 
+### Trajectory Visualization and Data Postprocessing (Generating predictions for metric)
+
+After you run `explore.py`, the script will produce results in the `experiments` folder. The script automatically generates a subdirectory inside it, using the current year, month, date. Under this folder, each result of map & start_pose & method pairs will be saved. For example, 
+    MapEx
+        ├── experiments
+            ├── 20250131_test
+                ├── 20250131_172221_50052750_513_880_visvarprob
+                    ├── global_obs
+                    ├── run_viz
+                    ├── odom.npy
+                ├── 20250131_172221_50052750_513_880_upen
+            ...
+
+`run_viz` folder contains visualization of exploration over timesteps. `global_obs` contains 2D top-down view observed occupancy grid map in .png file format over all timesteps. 
+
+Now for the purpose of metric and evaluations, run `simple_lama_pred.py` to generate predictions for these observations. 
+
+    python3 simple_lama_pred.py
+
+Make sure to customize `modelalltrain_path` and `input_experiment_root_folder` as needed. Especially, `input_experiment_root_folder` should be modified if the directory that contains the exploration results change. `simple_lama_pred.py` will generate predictions and save them under each folder like below:
+    MapEx
+        ├── experiments
+            ├── 20250131_test
+                ├── 20250131_172221_50052750_513_880_visvarprob
+                    ├── global_obs
+                    ├── global_pred
+                    ├── run_viz
+                    ├── odom.npy
+                ├── 20250131_172221_50052750_513_880_upen
+            ...
+
 ### Coverage and Predicted IoU
 
 ### Topological Understanding (TU)
