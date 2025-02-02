@@ -1,7 +1,7 @@
 <p align="center">
 <h1 align="center">MapEx: Indoor Structure Exploration with Probabilistic Information Gain from Global Map Predictions</h1>
 <h3 class="is-size-5 has-text-weight-bold" style="color: orange;" align="center">
-    International Conference on Robotics and Automation (ICRA) 2025 
+    IEEE International Conference on Robotics and Automation (ICRA) 2025 
 </h3>
   <p align="center">
     <a href="https://cherieho.com/" target="_blank"><strong>Cherie Ho*</strong></a>
@@ -28,9 +28,10 @@
   <div align="center"></div>
 
 ## Preliminary Setup
-Clone the repository
+Clone the repository and make sure that you are on the main branch.
 
     git clone git@github.com:castacks/MapEx.git
+    git checkout main
 
 ### Set up Mamba environment
 Mamba is a package manger used for managing python environments and dependencies, known for having better speed and efficiency than conda. For more information, please refer to this <a href="https://mamba.readthedocs.io/en/latest/user_guide/mamba.html">link</a>. 
