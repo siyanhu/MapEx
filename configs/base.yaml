@@ -38,7 +38,7 @@ pred_vis_configs:
   pixel_per_meter: 10
   num_laser: 250
 
-mission_time: 500
+mission_time: 1000
 
 show_plt_freq: 50
 

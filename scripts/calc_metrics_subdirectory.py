@@ -138,7 +138,7 @@ def get_coverage_data(folder):
     
     # Get the ground truth map from the map_id
     # TODO: parametrize this, later on, should save visble map in each experiment folder
-    kth_map_folder_path = os.path.join(map_prediction_toolbox_path, 'data_factory/fixed_kth_test_maps/')
+    kth_map_folder_path = os.path.join(root_path, 'kth_test_maps')
     validspace_npy_path = os.path.join(kth_map_folder_path, map_id, 'valid_space.npy')
 
     assert os.path.exists(validspace_npy_path), 'Valid space does not exist for map_id: {}'.format(map_id)
@@ -589,12 +589,12 @@ method_colors = {
     'visvar': 'green',
     'visvarprob': 'red',
     'upen': 'green',
-    'hectoraug': 'cyan'
+    #'hectoraug': 'cyan'
 }
 
-map_prediction_toolbox_path = '/home/seungchan/MapEx/'#
-experiment_folder_path = '/home/seungchan/MapEx/experiments'
-exp_parent_dir = '20250110_test' #'results/50015848' #'20240823_mapex_icra' 
+root_path = '/home/seungchan/MapEx/'#
+experiment_folder_path = os.path.join(root_path, 'experiments')
+exp_parent_dir = '20250110_test' #customize
 exp_parent_dir = os.path.join(experiment_folder_path, exp_parent_dir)
 skip_file_freq = 50
 max_mission_length = 1000

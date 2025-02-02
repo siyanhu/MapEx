@@ -139,7 +139,7 @@ Now for the purpose of metric and evaluations, run `simple_lama_pred.py` to gene
 
     python3 simple_lama_pred.py
 
-Make sure to customize `modelalltrain_path` and `input_experiment_root_folder` as needed. Especially, `input_experiment_root_folder` should be modified if the directory that contains the exploration results change. `simple_lama_pred.py` will generate predictions and save them under each folder like below:
+Make sure to customize `modelalltrain_path` and `input_experiment_root_folder` as needed. Especially, `input_experiment_root_folder` should be modified if the directory that contains the exploration results change. `simple_lama_pred.py` will generate predictions and save them in the `global_pred` directory under each folder like below:
 
     MapEx
         ├── experiments
@@ -153,6 +153,12 @@ Make sure to customize `modelalltrain_path` and `input_experiment_root_folder` a
             ...
 
 ### Coverage and Predicted IoU
+
+After you generated predictions of your observations, run `calc_metrics_subdirectory.py`. Make sure to customize your `root_path` and `exp_parent_dir` in the code. 
+
+    python3 calc_metrics_subdirectory.py
+
+This script will compute Coverage and Predicted IoU, and will visualize the plots like below.
 
 ### Topological Understanding (TU)
 
