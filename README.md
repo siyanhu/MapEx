@@ -164,9 +164,6 @@ This script will compute Coverage and Predicted IoU, and will visualize the plot
 
 ![CovIOU Image](https://github.com/mapex-explorer/mapex-explorer.github.io/blob/main/assets/cov-iou-example.png)
 
-### Topological Understanding (TU)
-
-
 ## Citation
 
 If you find our paper or code useful, please cite us:
