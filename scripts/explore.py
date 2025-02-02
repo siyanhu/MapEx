@@ -358,7 +358,6 @@ def run_exploration_for_map(occ_map, exp_title, models_list,lama_alltrain_model,
                     pred_maputils = None
                     var_map = None
                     mean_map = None
-                    #lama_reduced_pred_var = None 
                     padded_gt_map = None
                     if use_model:
                         cur_obs_img = mapper.obs_map.copy()
@@ -376,19 +375,11 @@ def run_exploration_for_map(occ_map, exp_title, models_list,lama_alltrain_model,
                             lama_pred_viz = visualize_prediction(lama_pred, lama_mask)
                             lama_pred_onechan = lama_pred['inpainted'][0][0]
                             lama_pred_list.append(lama_pred_onechan)
-                            #num_pix_to_reduce_for_subsampling = 1
-                            #lama_reduced_pred = block_reduce(lama_pred_onechan.cpu().numpy(), (num_pix_to_reduce_for_subsampling, num_pix_to_reduce_for_subsampling), np.max)
-                            #lama_reduced_pred_list.append(torch.tensor(lama_reduced_pred).to(device))
 
                         
                         # Get variance across batch dimension 
                         lama_pred_list = torch.stack(lama_pred_list)
                         var_map = torch.var(lama_pred_list, dim=0)
-                        #lama_reduced_pred_list = torch.stack(lama_reduced_pred_list)
-                        #lama_reduced_pred_var = torch.var(lama_reduced_pred_list, dim=0).cpu().numpy()
-                        # Resize lama_reduced_pred_var to be the same size as var_map, using nearest neighbor interpolation
-                        #lama_reduced_pred_var = cv2.resize(lama_reduced_pred_var, (var_map.shape[1], var_map.shape[0]), interpolation=cv2.INTER_NEAREST)
-                        #lama_reduced_pred_var = torch.from_numpy(lama_reduced_pred_var)
                         mean_map = np.mean(lama_pred_list.cpu().numpy(), axis=0)
 
                         pred_maputils = get_pred_maputils_from_viz(lama_pred_alltrain_viz)
@@ -528,16 +519,16 @@ def run_exploration_for_map(occ_map, exp_title, models_list,lama_alltrain_model,
 
                 
 
-                # if pose_list is not None:
-                #     ax_obs.plot(pose_list[:, 1]-pd_size, pose_list[:, 0]-pd_size, c='#417CF2', alpha=1.0)
-                #     #ax_obs.scatter(pose_list[-1, 1]-pd_size, pose_list[-1, 0]-pd_size, c='g', s=10, marker='*')
-                # if mode not in ['upen', 'hector', 'hectoraug']: # UPEN and Hector do not have locked frontiers
-                #     ax_obs.scatter(locked_frontier_center[1]-pd_size, locked_frontier_center[0]-pd_size, c='#D13EF5', s=10)
-                # #ax_obs.scatter(cur_pose[1]-pd_size, cur_pose[0]-pd_size, c='r', s=5, marker='x')
-                # #ax_obs.scatter(next_pose[1]-pd_size, next_pose[0]-pd_size, c='g', s=5, marker='x')
-                # if mode not in ['hector', 'hectoraug']: # Hector does not have path planning
-                #     ax_obs.plot(plan_y-pd_size, plan_x-pd_size,c='#417CF2', linestyle=':')
-                #     #ax_obs.scatter(plan_y-pd_size, plan_x-pd_size, c='#FF9F1C', s=1, marker='x')
+                if pose_list is not None:
+                    ax_obs.plot(pose_list[:, 1]-pd_size, pose_list[:, 0]-pd_size, c='#417CF2', alpha=1.0)
+                    #ax_obs.scatter(pose_list[-1, 1]-pd_size, pose_list[-1, 0]-pd_size, c='g', s=10, marker='*')
+                if mode not in ['upen', 'hector', 'hectoraug']: # UPEN and Hector do not have locked frontiers
+                    ax_obs.scatter(locked_frontier_center[1]-pd_size, locked_frontier_center[0]-pd_size, c='#D13EF5', s=10)
+                #ax_obs.scatter(cur_pose[1]-pd_size, cur_pose[0]-pd_size, c='r', s=5, marker='x')
+                #ax_obs.scatter(next_pose[1]-pd_size, next_pose[0]-pd_size, c='g', s=5, marker='x')
+                if mode not in ['hector', 'hectoraug']: # Hector does not have path planning
+                    ax_obs.plot(plan_y-pd_size, plan_x-pd_size,c='#417CF2', linestyle=':')
+                    #ax_obs.scatter(plan_y-pd_size, plan_x-pd_size, c='#FF9F1C', s=1, marker='x')
 
                 if mode not in ['upen', 'hector', 'hectoraug']: # UPEN and Hector are not a frontier planner
                     if viz_medium_flooded_grid is not None:
@@ -551,7 +542,8 @@ def run_exploration_for_map(occ_map, exp_title, models_list,lama_alltrain_model,
                         flooded_ind_colors_alpha = np.zeros((mapper.obs_map.shape[0],mapper.obs_map.shape[1],4))
                         flooded_ind_colors_alpha[flooded_ind[0],flooded_ind[1],:] = (255/255,159/255,28/255,0.3)
                         ###ax_obs.scatter(flooded_ind[1]-pad_w1, flooded_ind[0]-pad_h1,c="#FF9F1C",s=1,alpha=0.05)
-                        #ax_obs.imshow(flooded_ind_colors_alpha[pd_size+pad_h1:-(pd_size+pad_h2),pd_size+pad_w1:-(pd_size+pad_w2)])
+                        if mode == 'obsunk':
+                            ax_obs.imshow(flooded_ind_colors_alpha[pd_size+pad_h1:-(pd_size+pad_h2),pd_size+pad_w1:-(pd_size+pad_w2)])
 
                 ax_obs.set_title('Observed Map')
                 # print("3b. Visualizing Observed Map took {} seconds".format(np.round(time.time() - start_time, 2)))
@@ -685,7 +677,7 @@ def run_exploration_for_map(occ_map, exp_title, models_list,lama_alltrain_model,
                                     flooded_ind = np.where(most_flooded_grid==True)
                                     flooded_ind_colors_alpha = np.zeros((mean_map.shape[0],mean_map.shape[1],4))
                                     flooded_ind_colors_alpha[flooded_ind[0],flooded_ind[1],:] = (255/255,159/255,28/255,0.3) #orange color for visibility mask
-                                    #ax_mean_map.imshow(flooded_ind_colors_alpha[pd_size:-pd_size,pd_size:-pd_size])
+                                    ax_mean_map.imshow(flooded_ind_colors_alpha[pd_size:-pd_size,pd_size:-pd_size])
                                 if viz_medium_flooded_grid is not None:
                                     medium_flooded_ind = np.where(viz_medium_flooded_grid == True)
                                     medium_flooded_ind_colors_alpha = np.zeros((mean_map.shape[0],mean_map.shape[1],4))
