@@ -133,7 +133,9 @@ After you run `explore.py`, the script will produce results in the `experiments`
                 ├── 20250131_172221_50052750_513_880_upen
             ...
 
-`run_viz` folder contains visualization of exploration over timesteps. `global_obs` contains 2D top-down view observed occupancy grid map in .png file format over all timesteps. 
+`global_obs` contains 2D top-down view observed occupancy grid map in .png file format over all timesteps. `run_viz` folder contains visualization of exploration over timesteps as below.
+
+![RunViz Image](https://github.com/mapex-explorer/mapex-explorer.github.io/blob/main/assets/run_viz_example.png)
 
 Now for the purpose of metric and evaluations, run `simple_lama_pred.py` to generate predictions for these observations. 
 
