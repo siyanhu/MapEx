@@ -162,6 +162,8 @@ After you generated predictions of your observations, run `calc_metrics_subdirec
 
 This script will compute Coverage and Predicted IoU, and will visualize the plots like below.
 
+![CovIOU Image](https://github.com/mapex-explorer/mapex-explorer.github.io/blob/main/assets/cov-iou-example.png)
+
 ### Topological Understanding (TU)
 
 
