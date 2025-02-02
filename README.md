@@ -166,7 +166,7 @@ This script will compute Coverage and Predicted IoU, and will visualize the plot
 
 ## Code Management
 
-This repository will be maintained and improved by <a href="https://seungchan-kim.github.io" target="_blank"><strong>Seungchan Kim*</strong></a>. If you have any questions regarding the codes, please email to seungch2@andrew.cmu.edu. 
+This repository will be maintained and improved by <a href="https://seungchan-kim.github.io" target="_blank"><strong>Seungchan Kim</strong></a>. If you have any questions regarding the codes, please email to seungch2@andrew.cmu.edu. 
 
 ## Citation
 
