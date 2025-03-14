@@ -175,6 +175,7 @@ if use_cuda:
 		author='Corey Walsh',
 		version='0.1',
 		ext_modules = [ext],
+        zip_safe=False,
 		# inject our custom trigger
 		cmdclass={'build_ext': custom_build_ext})
 else:
@@ -188,4 +189,5 @@ else:
 		name='range_libc',
 		author='Corey Walsh',
 		version='0.1',
+        zip_safe=False,
 	    cmdclass = {'build_ext': build_ext})
